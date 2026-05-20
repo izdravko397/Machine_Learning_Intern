@@ -1,0 +1,77 @@
+1. How would you define machine learning?
+машинно обучение е дял в програмирането, при който подбран от нас (според конкретната задача) модел се тренира 
+с набор от данни и на база на тях могат да се правят предсказания 
+
+2. Can you name four types of applications where it shines?
+    1. спам филтър
+    2. хващане на банкови измами - нестандартни транзакции
+    3. интелигентен играч на дадена игра - (например шах)
+    4. откриване на заболявания от снимка - мозъчен тумор
+
+3. What is a labeled training set?
+това е когато всеки пример от тренировъчните данни има етикет който показва на 
+съответния пример каква е неговата реална стойност  и на база на 
+тях след тренирането на модела се прави предположение за желания резултат. 
+Това се използва при supervised learning 
+
+4. What are the two most common supervised tasks?
+регресия и класификация
+
+5. Can you name four common unsupervised tasks?
+клъстериране - групиране; намаляне на дименсиите; намиране на аномалии; визуализация на много сложни данни 
+
+6. What type of algorithm would you use to allow a robot to walk in various
+unknown terrains?
+Reinforcement learning - агент който се учи от грешките си
+
+
+7. What type of algorithm would you use to segment your customers into multiple groups?
+йерархично клъстериране
+
+8. Would you frame the problem of spam detection as a supervised learning prob‐
+lem or an unsupervised learning problem?
+supervised learning
+
+9. What is an online learning system?
+това е когато модела е в продъкшан среда и периодично се учи и от новите данни 
+
+10. What is out-of-core learning?
+това е когато данните за обучение на модела са прекалено много и не могат да се съберат 
+в паметта и затова се обработват и му се подават поетапно
+
+11. What type of algorithm relies on a similarity measure to make predictions?
+Instance-based algorithm при трениворка запомня данните наизуст и при предсказване търси в тях някакво сходство
+
+12. What is the difference between a model parameter and a model hyperparameter?
+параметър на модела е един от този, които моделът си ги изчислява по време на неговото 
+обучение(при линейната регресия тета 0 и тета 1), а хиперпараметъра е този който се задава предварително и служи 
+за реголяризация на самия модел повреме на неговото трениране и той остава постоянен
+(при к най близки модела н–най–близки е хиперпараметъра)
+
+13. What do model-based algorithms search for? What is the most common strategy
+they use to succeed? How do they make predictions?
+тези алгоритми търсят да намерят някаква тенденция или зависимост измежду данните които са признак и тези за които се цели точно предсказание
+най добрата стратеия е да се направят множество експерименти с различки такива алгоритми за да се остнови кой се справя най добре като най добрия фактор за това е кост функцията
+предсказанията се случват като след тренирането на модела той е изчислил своите параметри и на база на тях прави предсказания
+
+14. Can you name four of the main challenges in machine learning?
+лоши данни; недостатъчно данни; пренатренирването на модела (overfitting); прекалено прост модел (Underfitting)
+
+15. If your model performs great on the training data but generalizes poorly to new
+instances, what is happening? Can you name three possible solutions?
+това е overfitting:
+    1. опростяване на модела чрез избиране или на по прост или намаляне на параметрите на текущия или задаване на хиперпараметър за регуляризация
+    2. трениране на модела с повече данни или със същите данни които има само че да им се направи корекция на тяхното качество
+
+16. What is a test set, and why would you want to use it?
+това е от данните които са ни предоставени за да можем да натренираме модела и като си заделим малка част от тях с която да 
+направим тестове на модела с данни които той за пръв път вижда, за да можем да оценим неговия performance -> финален тест
+
+17. What is the purpose of a validation set?
+това е малка част от тренировъчните данни, той се използва за да могат да се настроят хиперпараметрите на модела
+
+18. What is the train-dev set, when do you need it, and how do you use it?
+използва се когато има много голяма разлика между тестване с тренировачните данни и валидейшан сета за да се разбере дали модела е претрениран или по скоро валидейшан сета е неправилно подбран
+
+19. What can go wrong if you tune hyperparameters using the test set?
+може от прекалено нагласяне да се случи така че да се угоди модела да работи перфектно споредтях но всъщност в реална среда с реални нови данни да не прави въобще добри предсказания

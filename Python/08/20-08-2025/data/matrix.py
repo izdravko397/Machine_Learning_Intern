@@ -1,0 +1,171 @@
+import array
+import numpy as np 
+
+class Matrix:
+    numpy_to_array_type = {
+    'int8': 'b',
+    'uint8': 'B',
+    'int16': 'h',
+    'uint16': 'H',
+    'int32': 'i',
+    'uint32': 'I',
+    'int64': 'q',
+    'uint64': 'Q',
+    'float32': 'f',
+    'float64': 'd',    
+    }
+
+    def __init__(self, cols=None, rows=None, dtype=np.ushort, fill=None, default_value=None, data=None):
+        if not (arr_type := Matrix.numpy_to_array_type.get(dtype.__name__)):
+            raise TypeError(f'Unsupported dtype {dtype}')
+
+        if data != None:
+            if any(arg != None for arg in [cols, rows, fill, default_value]):
+                raise TypeError("Cannot provide data together with cols, rows, fill or default_value")
+            
+            if isinstance(data[0], list):
+                if any(len(row) != len(data[0]) for row in data):
+                    raise ValueError('Every row must have same columns')
+            
+            self.cols = len(data[0]) if isinstance(data[0], list) else 1
+            self.rows = len(data)
+            self.matrix = array.array(arr_type, (data[i][j] for i in range(self.rows) for j in range(self.cols)))
+            return
+    
+        if cols == None or rows == None:
+            raise TypeError('Rows and cols are required arguments')
+        
+        self.cols = cols
+        self.rows = rows
+
+        if fill != None and default_value != None:
+            raise TypeError('Cannot provide both fill and default_value')
+
+        if fill != None:
+            self.matrix = array.array(arr_type, (fill(row, col) for row in range(rows) for col in range(cols)))
+
+        elif default_value != None:
+            self.matrix = array.array(arr_type, (default_value for _ in range(rows * cols)))
+
+        else:
+            raise TypeError('Must implement one of arguments: data, fill, default_value')
+            
+    @property
+    def shape(self):
+        return (self.rows, self.cols)
+    
+    @property
+    def T(self):
+        get_num = lambda r, c: self.matrix[c * self.cols + r]
+        return Matrix(rows=self.cols, cols=self.rows, fill=get_num)
+                
+    def __setitem__(self, key, value):
+        if isinstance(key, tuple):
+            key1, key2 = key
+
+            if isinstance(key1, int) and isinstance(key2, int):
+                self.matrix[key1 * self.cols + key2] = value
+
+            else:
+                if key1 is Ellipsis:
+                    key1 = slice(0, self.rows)
+                if key2 is Ellipsis:
+                    key2 = slice(0, self.rows)
+
+                for i in range(key1.start if key1.start != None else 0, key1.stop if key1.stop != None else self.rows):
+                    self.matrix[i][key2] = value
+
+        else:
+            self.matrix[key] = [value]
+
+    def __getitem__(self, key):
+        if isinstance(key, tuple):
+            key1, key2 = key
+
+            if isinstance(key1, int) and isinstance(key2, int):
+                return self.matrix[key1 * self.cols + key2]
+            
+            if key1 is Ellipsis:
+                key1 = slice(0, self.rows)
+            if key2 is Ellipsis:
+                key2 = slice(0, self.rows)
+
+            return [row[key2] for row in self.matrix[key1]]
+        
+        return self.matrix[key * self.cols:key * self.cols + self.cols]
+        
+    def submatrix(self, columns, rows):
+        cols_slice = columns
+        rows_slice = rows
+
+        if not isinstance(columns, slice):
+            col_start = columns[0]
+            col_stop = columns[1]
+            cols_slice = slice(col_start, col_stop)
+        
+        if not isinstance(rows, slice):
+            row_start = rows[0]
+            row_stop = rows[1]
+            rows_slice = slice(row_start, row_stop)
+
+        c_start, c_stop = cols_slice.start, cols_slice.stop
+        r_start, r_stop = rows_slice.start, rows_slice.stop
+        
+        sub_matrix = [self.matrix[r * self.cols + c] for r in range(r_start, r_stop) for c in range(c_start, c_stop)]
+        return Matrix(c_stop - c_start, r_stop - r_start, fill=lambda x, y: sub_matrix[x * (c_stop - c_start) + y])
+    
+    def __add__(self, n):
+        return Matrix(cols=self.cols, rows=self.rows, fill=lambda x, y: self.matrix[x * self.cols + y] + n)
+    
+    def __radd__(self, n):
+        return Matrix(cols=self.cols, rows=self.rows, fill=lambda x, y: self.matrix[x * self.cols + y] + n)
+    
+    def __sub__(self, n):
+        return Matrix(dtype=np.int64, cols=self.cols, rows=self.rows, fill=lambda x, y: self.matrix[x * self.cols + y] - n)
+    
+    def __rsub__(self, n):
+        return Matrix(dtype=np.int64, cols=self.cols, rows=self.rows, fill=lambda x, y: n - self.matrix[x * self.cols + y])
+    
+    def __mul__(self, n):
+        return Matrix(cols=self.cols, rows=self.rows, fill=lambda x, y: self.matrix[x * self.cols + y] * n)
+    
+    def __rmul__(self, n):
+        return Matrix(cols=self.cols, rows=self.rows, fill=lambda x, y: self.matrix[x * self.cols + y] * n)
+
+    def __truediv__(self, n):
+        if n == 0:
+            raise ZeroDivisionError
+        return Matrix(dtype=np.float64, cols=self.cols, rows=self.rows, fill=lambda x, y: self.matrix[x * self.cols + y] / n)
+    
+    def __rtruediv__(self, n):
+        return Matrix(dtype=np.float64, cols=self.cols, rows=self.rows, fill=lambda x, y: n / self.matrix[x * self.cols + y] if self.matrix[x * self.cols + y] != 0 else 1)
+    
+    # def __str__(self):
+    #     return '[' + '\n'.join(
+    #         '[' + ', '.join(str(self.matrix[r * self.cols + c]) for c in range(self.cols)) + ']'
+    #         for r in range(self.rows)) + ']'
+
+    # def __str__(self):
+    #     max_len = max(len(str(el)) for el in self.matrix)
+    #     return '\n'.join(
+    #         ' '.join(f'{self.matrix[r * self.cols + c]:>{max_len}}' for c in range(self.cols))
+    #         for r in range(self.rows))
+
+    def __str__(self):
+        max_each_col_len = []
+
+        for c in range(self.cols):
+            col_len = set()
+            for r in range(self.rows):
+                col_len.add(len(str(self.matrix[r * self.cols + c])))
+            max_each_col_len.append(max(col_len))
+        
+        return '\n'.join(
+            ' '.join(f'{self.matrix[r * self.cols + c]:>{max_each_col_len[c]}}' for c in range(self.cols))
+            for r in range(self.rows))
+
+    # def __str__(self):
+    #     max_len = max(len(str(el)) for el in self.matrix)
+    #     return '\n'.join(
+    #         ' '.join(f'{hex(self.matrix[r * self.cols + c]):>{max_len}}'[2:] for c in range(self.cols))
+    #         for r in range(self.rows))
